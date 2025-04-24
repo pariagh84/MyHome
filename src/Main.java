@@ -2,6 +2,9 @@ import Abstraction.Device;
 import Abstraction.Rule;
 import Devices.Light;
 import Devices.Thermostat;
+import exceptions.DeviceNotFoundException;
+import exceptions.DuplicateException;
+import exceptions.InvalidInputException;
 
 import java.util.*;
 
@@ -15,23 +18,20 @@ class SmartHomeSystem {
     }
 
     public void addDevice(String type, String name, String protocol) {
-        if (!type.equals("light") && !type.equals("thermostat")) {
-            System.out.println("invalid input");
-            return;
+        if (!type.equalsIgnoreCase("light") && !type.equalsIgnoreCase("thermostat")) {
+            throw new InvalidInputException("invalid input");
         }
         if (!protocol.equalsIgnoreCase("WiFi") && !protocol.equalsIgnoreCase("Bluetooth")) {
-            System.out.println("invalid input");
-            return;
+            throw new InvalidInputException("invalid input");
         }
         for (Device device : devices) {
             if (device.getName().equals(name)) {
-                System.out.println("Duplicate device name");
-                return;
+                throw new DuplicateException("Duplicate device name");
             }
         }
 
         Device newDevice;
-        if (type.equals("light")) {
+        if (type.equalsIgnoreCase("light")) {
             newDevice = new Light(name, protocol);
         } else {
             newDevice = new Thermostat(name, protocol);
@@ -49,8 +49,7 @@ class SmartHomeSystem {
             }
         }
         if (targetDevice == null) {
-            System.out.println("device not found");
-            return;
+            throw new DeviceNotFoundException("device not found");
         }
         if (targetDevice.setProperty(property, value)) {
             System.out.println("device updated successfully");
@@ -66,8 +65,7 @@ class SmartHomeSystem {
             }
         }
         if (targetDevice == null) {
-            System.out.println("device not found");
-            return;
+            throw new DeviceNotFoundException("device not found");
         }
         devices.remove(targetDevice);
         rules.removeIf(rule -> rule.deviceName().equals(name));
@@ -93,21 +91,18 @@ class SmartHomeSystem {
             }
         }
         if (targetDevice == null) {
-            System.out.println("device not found");
-            return;
+            throw new DeviceNotFoundException("device not found");
         }
         if (isValidTime(time)) {
-            System.out.println("invalid time");
-            return;
+            throw new InvalidInputException("invalid time");
         }
         if (!action.equals("on") && !action.equals("off")) {
-            System.out.println("invalid action");
-            return;
+            throw new InvalidInputException("invalid action");
         }
         for (Rule rule : rules) {
             if (rule.deviceName().equals(deviceName) && rule.time().equals(time)) {
-                System.out.println("duplicate rule");
-                return;
+                throw new DuplicateException("duplicate rule");
+
             }
         }
         rules.add(new Rule(deviceName, time, action));
@@ -116,8 +111,7 @@ class SmartHomeSystem {
 
     public void checkRules(String time) {
         if (isValidTime(time)) {
-            System.out.println("invalid time");
-            return;
+            throw new InvalidInputException("invalid time");
         }
         for (Rule rule : rules) {
             if (rule.time().equals(time)) {
@@ -163,22 +157,42 @@ public class Main {
             String[] command = scanner.nextLine().split(" ");
             switch (command[0]) {
                 case "add_device":
-                    system.addDevice(command[1], command[2], command[3]);
+                    try {
+                        system.addDevice(command[1], command[2], command[3]);
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case "set_device":
-                    system.setDevice(command[1], command[2], command[3]);
+                    try {
+                        system.setDevice(command[1], command[2], command[3]);
+                    } catch (DeviceNotFoundException e) {
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case "remove_device":
-                    system.removeDevice(command[1]);
+                    try {
+                        system.removeDevice(command[1]);
+                    } catch (DeviceNotFoundException e) {
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case "list_devices":
                     system.listDevices();
                     break;
                 case "add_rule":
-                    system.addRule(command[1], command[2], command[3]);
+                    try {
+                        system.addRule(command[1], command[2], command[3]);
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case "check_rules":
-                    system.checkRules(command[1]);
+                    try {
+                        system.checkRules(command[1]);
+                    } catch (InvalidInputException e) {
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case "list_rules":
                     system.listRules();
