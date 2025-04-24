@@ -1,10 +1,6 @@
-import Abstraction.Device;
-import Abstraction.Rule;
-import Devices.Light;
-import Devices.Thermostat;
-import exceptions.DeviceNotFoundException;
-import exceptions.DuplicateException;
-import exceptions.InvalidInputException;
+import Abstraction.*;
+import Devices.*;
+import exceptions.*;
 
 import java.util.*;
 
